@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String?
+  isSubscriber  Boolean        @default(false)
+  subscriptions Subscription[]
+  tickets       Ticket[]
+  gameHistories GameHistory[]
+  wonRaffles    Raffle[]       @relation("RaffleWinner")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: id)
+  status    String   // ACTIVE, CANCELLED, EXPIRED
+  startDate DateTime @default(now())
+  endDate   DateTime
+}
+
+model Raffle {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  prize       String
+  status      String   // OPEN, CLOSED, DRAWN
+  drawDate    DateTime
+  winnerId    String?  // Relación con el usuario ganador
+  winner      User?    @relation("RaffleWinner", fields: [winnerId], references: id)
+  tickets     Ticket[]
+  createdAt   DateTime @default(now())
+}
+
+model Ticket {
+  id        String   @id @default(uuid())
+  number    Int
+  userId    String
+  user      User     @relation(fields: [userId], references: id)
+  raffleId  String
+  raffle    Raffle   @relation(fields: [raffleId], references: id)
+  createdAt DateTime @default(now())
+}
+
+model GameHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: id)
+  gameType  String   // ROULETTE, SLOTS, SCRATCH
+  result    String
+  isWin     Boolean  @default(false)
+  prize     String?
+  createdAt DateTime @default(now())
+}
