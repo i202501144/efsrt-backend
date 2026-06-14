@@ -6,13 +6,7 @@ import { RaffleModule } from './modules/raffle/raffle.module';
 import { WinnersModule } from './modules/winners/winners.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    AuthModule,
-    UserModule,
-    RaffleModule,
-    WinnersModule,
-  ],
+  imports: [PrismaModule, AuthModule, UserModule, RaffleModule, WinnersModule],
   controllers: [],
   providers: [],
 })

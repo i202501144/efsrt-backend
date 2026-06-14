@@ -1,8 +1,14 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto, LoginDto } from '../dto/auth.dto';
+import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from '../dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -61,6 +67,67 @@ export class AuthService {
         name: user.name,
         isSubscriber: user.isSubscriber,
       },
+    };
+  }
+
+  async forgotPassword(data: ForgotPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    // Generate a 6-digit random code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await this.prisma.user.update({
+      where: { email: data.email },
+      data: {
+        resetCode: code,
+        resetCodeExpires: expires,
+      },
+    });
+
+    // Return the code to the frontend for simulation
+    return {
+      message: 'Código de recuperación generado con éxito',
+      code,
+    };
+  }
+
+  async resetPassword(data: ResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    if (!user.resetCode || user.resetCode !== data.code) {
+      throw new BadRequestException('Código de recuperación inválido');
+    }
+
+    if (!user.resetCodeExpires || new Date() > user.resetCodeExpires) {
+      throw new BadRequestException('El código de recuperación ha expirado');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { email: data.email },
+      data: {
+        password: hashedPassword,
+        resetCode: null,
+        resetCodeExpires: null,
+      },
+    });
+
+    return {
+      message: 'Contraseña restablecida con éxito',
     };
   }
 }

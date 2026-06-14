@@ -24,14 +24,14 @@ export class WinnersService {
 
     // Combinamos y formateamos
     const combined = [
-      ...raffleWinners.map(rw => ({
+      ...raffleWinners.map((rw) => ({
         id: rw.id,
         name: rw.winner?.name || 'Usuario',
         prize: rw.prize,
         date: rw.drawDate,
         method: 'Rifa',
         rarity: 'Legendario',
-        image: `https://i.pravatar.cc/150?u=${rw.winnerId}`
+        image: `https://i.pravatar.cc/150?u=${rw.winnerId}`,
       })),
       ...gameWinners.map((gw) => ({
         id: gw.id,
@@ -40,11 +40,13 @@ export class WinnersService {
         date: gw.createdAt,
         method: gw.gameType,
         rarity: gw.gameType === 'SLOTS' ? 'Épico' : 'Raro',
-        image: `https://i.pravatar.cc/150?u=${gw.userId}`
-      }))
+        image: `https://i.pravatar.cc/150?u=${gw.userId}`,
+      })),
     ];
 
     console.log(`[Winners] Total encontrados: ${combined.length}`);
-    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return combined.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
   }
 }
